@@ -3,6 +3,7 @@ import { api } from "../api/axios";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import {Input, Button} from "../components/index.js";
+import toast from "react-hot-toast";
 
 
 
@@ -26,13 +27,13 @@ function Register() {
       const response = await api.post("/users/register", formData);
       
       if(response.data.success) {
-        alert("Registration successful! Please login.");
+        toast.success("Registration successful! Please login.");
         navigate("/login");
       }
     } catch (error) {
       console.error(error.response.data);
 
-      alert(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
