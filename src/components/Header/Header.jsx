@@ -3,22 +3,26 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../api/axios";
 import toast from "react-hot-toast";
 import Button from "../Button";
+import { useDispatch, useSelector } from "react-redux";
+import {logout as autLogout} from "../../store/authSlice"
+
 function Header() {
   const navigate = useNavigate();
-  const isLoggedIn = true;
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const handleLogout = async () => {
     try {
-      const response = await api.post("/users/logout");
-      if (response.data.success) {
-        toast.success("Logout successful!");
-        navigate("/login");
-      }
+      await api.post("/users/logout");
+      dispatch(autLogout());
+      toast.success("Logout successful");
+      navigate("/login");
     } catch (error) {
-      console.error(error.response.data);
-      toast.error(error.response?.data?.message || "Something went wrong");
+      toast.error(error.response?.data?.message || "Logout failed");
     }
   };
+
   return (
     // create header along with logo and navigation links
     <header className="bg-zinc-950 border-b border-zinc-800 px-6 py-4">
@@ -39,7 +43,7 @@ function Header() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <>
               <Link to="/login">
                 <Button>Login</Button>
@@ -54,10 +58,12 @@ function Header() {
               <Button>Upload</Button>
 
               <img
-                src="https://i.pravatar.cc/100"
+                src={user?.avatar}
                 alt="profile"
                 className="w-10 h-10 rounded-full object-cover cursor-pointer"
               />
+
+              <Button onClick={handleLogout}>Logout</Button>
             </>
           )}
         </div>

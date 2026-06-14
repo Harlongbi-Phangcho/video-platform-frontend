@@ -22,7 +22,7 @@ function Home() {
       </section>
 
       {/* Categories */}
-      <section className="px-6 mb-8">
+      <section className="px-8 mb-8">
         <div className="flex gap-3 overflow-x-auto">
 
           {[

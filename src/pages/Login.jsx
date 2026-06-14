@@ -4,21 +4,24 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { Input, Button } from "../components/index.js";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import {login} from "../store/authSlice.js"
 
 function Login() {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+
   const onSubmit = async (data) => {
     try {
-      console.log(data);
-     
-     
       const response = await api.post("/users/login", {
         email: data.email,
         password: data.password,
       });
-      console.log(response.data);
+ 
       if (response.data.success) {
+        dispatch(login(response.data.data.user));
         toast.success("Login successful!");
         navigate("/");
       }
