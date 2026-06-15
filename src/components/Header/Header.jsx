@@ -4,7 +4,7 @@ import { api } from "../../api/axios";
 import toast from "react-hot-toast";
 import Button from "../Button";
 import { useDispatch, useSelector } from "react-redux";
-import {logout as autLogout} from "../../store/authSlice"
+import { logout as autLogout } from "../../store/authSlice";
 
 function Header() {
   const navigate = useNavigate();
@@ -55,13 +55,19 @@ function Header() {
             </>
           ) : (
             <>
-              <Button>Upload</Button>
+              <Link to="/upload">
+                <Button>Upload</Button>
+              </Link>
 
-              <img
-                src={user?.avatar}
-                alt="profile"
-                className="w-10 h-10 rounded-full object-cover cursor-pointer"
-              />
+              <div className="flex items-center gap-2">
+                <img
+                  src={user?.avatar}
+                  alt="profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+
+                <span className="text-zinc-300 text-sm">{user?.username}</span>
+              </div>
 
               <Button onClick={handleLogout}>Logout</Button>
             </>
