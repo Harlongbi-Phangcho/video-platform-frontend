@@ -1,8 +1,11 @@
 import React from "react";
+import {formatDistanceToNow} from "date-fns";
+import {Link} from "react-router-dom";
 
-function Card({ thumbnail, title, channelName, views, uploadedAt, avatar }) {
+function Card({ id, thumbnail, title, channelName, views, uploadedAt, avatar }) {
   return (
     // create card to show diffrent video
+   <Link to={`/watch/${id}`}>
     <div className="w-full cursor-pointer rounded-xl overflow-hidden hover:bg-zinc-900 transition p-2">
       {/* thumbnail */}
       <div className="aspect-video rounded-xl overflow-hidden">
@@ -15,26 +18,28 @@ function Card({ thumbnail, title, channelName, views, uploadedAt, avatar }) {
 
       {/* content */}
       <div className="flex mt-3 gap-3">
-        
-      {/* avatar */}
-      <img
-        src={avatar}
-        alt={channelName}
-        className="w-10 h-10 rounded-full object-cover"
-      />
+        {/* avatar */}
+        <img
+          src={avatar}
+          alt={channelName}
+          className="w-10 h-10 rounded-full object-cover"
+        />
 
-      {/* Video info */}
+        {/* Video info */}
         <div className="flex flex-col gap-1">
-            <h3 className="font-semibold text-white line-clamp-2">{title}</h3>
-            <p className="text-sm text-zinc-400">{channelName}</p>
-            <div className="text-sm text-zinc-400 flex gap-2">
-                <span>{views} views</span>
-                <span className="mx-1">•</span>
-                <span>{uploadedAt}</span>
-            </div>
+          <h3 className="font-semibold text-white line-clamp-2">{title}</h3>
+          <p className="text-sm text-zinc-400">{channelName}</p>
+          <div className="text-sm text-zinc-400 flex gap-2">
+            <span>{views} views</span>
+            <span className="mx-1">•</span>
+            <span>
+              {formatDistanceToNow(new Date(uploadedAt), {addSuffix: true})}
+            </span>
+          </div>
         </div>
       </div>
     </div>
+   </Link>
   );
 }
 

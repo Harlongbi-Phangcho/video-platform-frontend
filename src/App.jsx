@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import WatchVideo from "./pages/WatchVideo";
 import Layout from "./layout/Layout";
 import { useDispatch } from "react-redux";
 import { api } from "./api/axios";
@@ -43,24 +44,35 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-        <Route path="/upload" element={
+      
+        <Route
+          path="/upload"
+          element={
             <AuthLayout>
               <UploadVideo />
             </AuthLayout>
           }
         />
-        <Route path="/login" element={
+        <Route
+          path="/login"
+          element={
             <AuthLayout authentication={false}>
               <Login />
             </AuthLayout>
           }
         />
-        <Route path="/register" element={
-           <AuthLayout authentication={false}>
+        <Route
+          path="/register"
+          element={
+            <AuthLayout authentication={false}>
               <Register />
             </AuthLayout>
           }
         />
+      </Route>
+
+      <Route path="/watch/:videoId" element={<WatchVideo />}>
+
       </Route>
     </Routes>
   );
