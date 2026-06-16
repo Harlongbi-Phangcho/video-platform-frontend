@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -12,47 +12,65 @@ import { FaSpinner } from "react-icons/fa";
 import AuthLayout from "./components/AuthLayout";
 import UploadVideo from "./pages/UploadVideo";
 
+// Simple inline 404 — move to pages/NotFound.jsx if it grows
+function NotFound() {
+  return (
+    <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-3 text-white">
+      <h1 className="text-6xl font-bold text-red-500">404</h1>
+      <p className="text-zinc-400 text-lg">Page not found</p>
+      <a href="/" className="mt-2 text-red-400 hover:text-red-300 transition">
+        Go home
+      </a>
+    </div>
+  );
+}
+
 function App() {
   const [loading, setLoading] = useState(true);
   const dispatch = useDispatch();
+
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
         const response = await api.get("/users/current-user");
-
         if (response.data.success) {
           dispatch(authLogin(response.data.data));
         }
-      } catch (error) {
-        console.log("No user logged in");
+      } catch {
+        // Silently ignore — user simply isn't logged in
       } finally {
         setLoading(false);
       }
     };
     getCurrentUser();
-  }, []);
+  }, [dispatch]); // dispatch added to dependency array
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-zinc-950 flex items-center justify-center gap-3">
         <FaSpinner className="text-red-500 text-5xl animate-spin" />
         <p className="text-zinc-400">Loading...</p>
       </div>
     );
   }
+
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-      
+
+        {/* Watch video inside Layout so the header is visible */}
+        <Route path="/watch/:videoId" element={<WatchVideo />} />
+
         <Route
           path="/upload"
           element={
-            <AuthLayout>
+            <AuthLayout authentication={true}>
               <UploadVideo />
             </AuthLayout>
           }
         />
+
         <Route
           path="/login"
           element={
@@ -61,6 +79,7 @@ function App() {
             </AuthLayout>
           }
         />
+
         <Route
           path="/register"
           element={
@@ -69,10 +88,9 @@ function App() {
             </AuthLayout>
           }
         />
-      </Route>
 
-      <Route path="/watch/:videoId" element={<WatchVideo />}>
-
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );
