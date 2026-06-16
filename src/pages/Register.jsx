@@ -159,7 +159,7 @@ function Register() {
                   className="w-14 h-14 rounded-full object-cover border-2 border-red-500"
                 />
               )}
-              <div className="flex-1">
+              <div className="flex-1 ">
                 <Input
                   label="Avatar"
                   type="file"
