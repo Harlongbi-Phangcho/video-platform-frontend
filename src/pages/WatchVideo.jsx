@@ -60,29 +60,19 @@ function WatchVideo() {
 
   if (!video) return null;
 
-  const {
-    videoFile,
-    title,
-    description,
-    views,
-    likes,
-    createdAt,
-    owner,
-  } = video;
+  const { videoFile, title, description, views, likesCount, createdAt, owner } = video;
 
-
-   return (
+  return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
         {/* Left — video + details */}
         <div className="flex-1 min-w-0">
-
           {/* Video player */}
           <div className="w-full aspect-video bg-black rounded-xl overflow-hidden">
             <video
               src={videoFile}
+              poster={video.thumbnail}
               controls
-              autoPlay
               className="w-full h-full object-contain"
             />
           </div>
@@ -119,7 +109,7 @@ function WatchVideo() {
                   {formatDistanceToNow(new Date(createdAt), {
                     addSuffix: true,
                   })}
-                </p>
+                </p> 
               </div>
             </div>
 
@@ -127,7 +117,7 @@ function WatchVideo() {
             <div className="flex items-center gap-2">
               <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-sm transition">
                 <FiThumbsUp size={15} />
-                <span>{likes?.toLocaleString() ?? 0}</span>
+                <span>{likesCount?.toLocaleString() ?? 0}</span>
               </button>
               <button className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-zinc-800 hover:bg-zinc-700 text-sm transition">
                 <FiThumbsDown size={15} />
@@ -141,7 +131,6 @@ function WatchVideo() {
                 <span className="hidden sm:inline">Save</span>
               </button>
             </div>
-
           </div>
 
           {/* Description */}
@@ -156,19 +145,18 @@ function WatchVideo() {
               >
                 {descriptionExpanded ? "Show less" : "Show more"}
               </button>
-            )} 
+            )}
           </div>
         </div>
 
         {/* Right — recommended videos placeholder */}
         <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0">
-
           <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
             Up next
           </h2>
 
           <div className="flex flex-col gap-3">
-             {[...Array(5)].map((_, i) => (
+            {[...Array(5)].map((_, i) => (
               <div key={i} className="flex gap-3 animate-pulse">
                 <div className="w-40 aspect-video bg-zinc-800 rounded-lg flex-shrink-0" />
                 <div className="flex-1 space-y-2 pt-1">
@@ -179,9 +167,7 @@ function WatchVideo() {
               </div>
             ))}
           </div>
-          
         </aside>
-
       </div>
     </div>
   );

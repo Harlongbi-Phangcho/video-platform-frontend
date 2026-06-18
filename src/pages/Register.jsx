@@ -1,32 +1,46 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { api } from "../api/axios";
 import { useForm } from "react-hook-form";
 import { useNavigate, Link } from "react-router-dom";
 import { Input, Button } from "../components/index.js";
 import toast from "react-hot-toast";
 
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
 const MAX_FILE_SIZE_MB = 5;
 
 function Register() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    watch,
-  } = useForm();
+  const {register,handleSubmit,formState: { errors },watch,} = useForm();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   // Live preview for avatar
   const avatarFile = watch("avatar");
-  const avatarPreview =
-    avatarFile?.[0] ? URL.createObjectURL(avatarFile[0]) : null;
+
+  useEffect(() => {
+    const file = avatarFile?.[0];
+    if (!file) {
+      setAvatarPreview(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
+
+    // Cleanup: revoke the previous blob URL when file changes or component unmounts
+    return () => URL.revokeObjectURL(url);
+  }, [avatarFile]);
 
   const validateImage = (fileList, required = true) => {
     if (!fileList || fileList.length === 0) {
       return required ? "This field is required" : true;
     }
+    
     const file = fileList[0];
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       return "Only JPG, PNG, or WEBP images are allowed";
@@ -84,7 +98,10 @@ function Register() {
               disabled={isLoading}
               {...register("fullName", {
                 required: "Full name is required",
-                minLength: { value: 2, message: "Name must be at least 2 characters" },
+                minLength: {
+                  value: 2,
+                  message: "Name must be at least 2 characters",
+                },
               })}
             />
             {errors.fullName && (
@@ -100,7 +117,10 @@ function Register() {
               disabled={isLoading}
               {...register("username", {
                 required: "Username is required",
-                minLength: { value: 3, message: "Username must be at least 3 characters" },
+                minLength: {
+                  value: 3,
+                  message: "Username must be at least 3 characters",
+                },
                 pattern: {
                   value: /^[a-zA-Z0-9_]+$/,
                   message: "Only letters, numbers, and underscores allowed",
@@ -141,7 +161,10 @@ function Register() {
               disabled={isLoading}
               {...register("password", {
                 required: "Password is required",
-                minLength: { value: 6, message: "Password must be at least 6 characters" },
+                minLength: {
+                  value: 8,
+                  message: "Password must be at least 8 characters",
+                },
               })}
             />
             {errors.password && (
@@ -188,7 +211,9 @@ function Register() {
               })}
             />
             {errors.coverImage && (
-              <p className="text-red-400 text-xs">{errors.coverImage.message}</p>
+              <p className="text-red-400 text-xs">
+                {errors.coverImage.message}
+              </p>
             )}
           </div>
 
@@ -205,7 +230,10 @@ function Register() {
         {/* Footer */}
         <p className="text-center text-zinc-400 text-sm mt-6">
           Already have an account?{" "}
-          <Link to="/login" className="text-red-400 hover:text-red-300 transition">
+          <Link
+            to="/login"
+            className="text-red-400 hover:text-red-300 transition"
+          >
             Sign in
           </Link>
         </p>
