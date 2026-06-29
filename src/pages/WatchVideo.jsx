@@ -15,23 +15,36 @@ import { Button, Input } from "../components/index";
 import { useForm } from "react-hook-form";
 
 function WatchVideo() {
-  const { videoId } = useParams();
+  const { videoId } = useParams(); // get videoId from URL params
+
+  // video data
   const [video, setVideo] = useState(null);
 
+  // like state
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
 
+  // page loading / error state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // description expand toggle
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
 
-  const [comments, setComments] = useState([]);
-  const [commentsPage, setCommentsPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const COMMENTS_LIMIT = 10;
+  // comments state
+  const [comments, setComments] = useState([]); // current loaded comments
+  const [commentsPage, setCommentsPage] = useState(1); // current page number
+  const [hasMore, setHasMore] = useState(true); // whether more pages exist
+  const [commentsLoading, setCommentsLoading] = useState(false); // loading next page
+  const [commentSubmitting, setCommentSubmitting] = useState(false); // posting a comment
+  const COMMENTS_LIMIT = 10; // comments per page
 
+  // subscription state
+  const [subscribed, setSubscribed] = useState(false);
+  const [subscribersCount, setSubscribersCount] = useState(0);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+
+  // comment form
   const {
     register,
     handleSubmit,
@@ -39,18 +52,21 @@ function WatchVideo() {
     formState: { errors },
   } = useForm();
 
-  
+  // Fetch Comment
+  // append: true = add to existing list (load more), false = replace list (refresh)
   const fetchComments = async (page = 1, append = false) => {
     setCommentsLoading(true);
-
     try {
-      const res = await api.get(`/comments/${videoId}?page=${page}&limit=${COMMENTS_LIMIT}`);
-
+      const res = await api.get(
+        `/comments/${videoId}?page=${page}&limit=${COMMENTS_LIMIT}`,
+      );
       const newComments = res.data.data;
 
+      // if append, spread previous comments + new ones; otherwise replace
       setComments((prev) => (append ? [...prev, ...newComments] : newComments));
-      setHasMore(newComments.length === COMMENTS_LIMIT);
 
+      // if API returned fewer than limit, there are no more pages
+      setHasMore(newComments.length === COMMENTS_LIMIT);
     } catch (error) {
       console.error(error);
     } finally {
@@ -58,19 +74,24 @@ function WatchVideo() {
     }
   };
 
-  
+  // Fetch Video
   useEffect(() => {
     const fetchVideo = async () => {
       setLoading(true);
       setError(null);
-
       try {
         const res = await api.get(`/videos/${videoId}`);
-        setVideo(res.data.data);
-        setLiked(res.data.data?.isLike);
-        setLikesCount(res.data.data?.likesCount ?? 0);
+        const videoData = res.data.data;
+        setVideo(videoData);
 
-        await fetchComments(1); // start at page 1
+        setLiked(videoData?.isLike ?? false);
+        setLikesCount(videoData?.likesCount ?? 0);
+
+        setSubscribed(videoData?.isSubscribed ?? false);
+        setSubscribersCount(videoData?.subscribersCount ?? 0);
+
+        // fetch first page of comments alongside video
+        await fetchComments(1);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to load video.");
       } finally {
@@ -80,18 +101,19 @@ function WatchVideo() {
     fetchVideo();
   }, [videoId]);
 
-
+  // Load More Comments
   const handleLoadMore = () => {
     const nextPage = commentsPage + 1;
     setCommentsPage(nextPage);
-    fetchComments(nextPage, true); // append to existing list
+    fetchComments(nextPage, true); // append = true so existing comments stay
   };
 
+  // Toggle Like
+  // update count immediately, revert on error
   const handleLike = async () => {
     try {
       const res = await api.post(`/likes/toggle/v/${videoId}`);
       const likedNow = res.data.data.liked;
-
       setLiked(likedNow);
       setLikesCount((prev) => (likedNow ? prev + 1 : prev - 1));
     } catch (error) {
@@ -99,15 +121,46 @@ function WatchVideo() {
     }
   };
 
+  // Toggle Subscription
+  // Math.max prevents subscriber count going below 0
+  const handleSubscribe = async () => {
+    if (!video?.owner?._id) return;
+    setSubscriptionLoading(true);
+    try {
+      const res = await api.post(`/subscriptions/c/${video.owner._id}`);
+      const subscribedNow = res.data.data.subscribed;
+      setSubscribed(subscribedNow);
+      setSubscribersCount((prev) =>
+        subscribedNow ? prev + 1 : Math.max(prev - 1, 0),
+      );
+      toast.success(
+        subscribedNow ? "Subscribed successfully" : "Unsubscribed successfully",
+      );
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update subscription",
+      );
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
+
+  // Post Comment
   const onCommentSubmit = async (data) => {
     setCommentSubmitting(true);
     try {
       await api.post(`/comments/${videoId}`, { content: data.content });
       toast.success("Comment added");
+      reset(); // clear the input field
 
-      reset();
+      // reset to page 1 and refresh comment list so new comment appears at top
       setCommentsPage(1);
-      fetchComments(1, false); // refresh from top
+      fetchComments(1, false); // append = false → replace list
+
+      // optimistically increment comment count in video state
+      setVideo((prev) =>
+        prev ? { ...prev, commentsCount: (prev.commentsCount || 0) + 1 } : prev,
+      );
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to add comment");
     } finally {
@@ -115,6 +168,7 @@ function WatchVideo() {
     }
   };
 
+  //Loading State
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center gap-3">
@@ -124,6 +178,7 @@ function WatchVideo() {
     );
   }
 
+  //  Error State
   if (error) {
     return (
       <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-4 text-center px-4">
@@ -145,43 +200,55 @@ function WatchVideo() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
-        {/* Left — video + details */}
+        {/* ── Left column: video + details ── */}
         <div className="flex-1 min-w-0">
           {/* Video player */}
           <div className="w-full aspect-video bg-black rounded-xl overflow-hidden">
             <video
               src={videoFile}
-              poster={video.thumbnail}
+              poster={video.thumbnail} // shows thumbnail before user hits play
               controls
               className="w-full h-full object-contain"
             />
           </div>
 
-          {/* Title */}
+          {/* Video title */}
           <h1 className="text-xl font-semibold mt-4 leading-snug">{title}</h1>
 
-          {/* Meta row */}
+          {/* Meta row: channel info + action buttons */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-3">
-            {/* Channel info */}
             <div className="flex items-center gap-3">
-              {owner?.avatar ? (
-                <img
-                  src={owner.avatar}
-                  alt={owner.username}
-                  className="w-10 h-10 rounded-full object-cover border border-zinc-700"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold text-sm border border-zinc-700">
-                  {owner?.username?.charAt(0).toUpperCase() ?? "?"}
-                </div>
-              )}
+              {/* Owner avatar with initial fallback */}
+              <Link to={`/channel/${owner?.username}`}>
+                {owner?.avatar ? (
+                  <img
+                    src={owner?.avatar}
+                    alt={owner?.username}
+                    className="w-10 h-10 rounded-full object-cover border border-zinc-700"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center font-bold text-sm border border-zinc-700">
+                    {owner?.username?.charAt(0).toUpperCase() ?? "?"}
+                  </div>
+                )}
+              </Link>
+
               <div>
+                {/* Channel link */}
                 <Link
                   to={`/channel/${owner?.username}`}
                   className="text-sm font-medium hover:text-red-400 transition"
                 >
                   {owner?.username}
                 </Link>
+
+                {/* Subscriber count — plural handled */}
+                <p className="text-xs text-zinc-500 mt-0.5">
+                  {subscribersCount.toLocaleString()}{" "}
+                  {subscribersCount === 1 ? "subscriber" : "subscribers"}
+                </p>
+
+                {/* View count + upload time */}
                 <p className="text-xs text-zinc-500 flex items-center gap-1 mt-0.5">
                   <FiEye size={12} />
                   {views?.toLocaleString()} views ·{" "}
@@ -190,10 +257,31 @@ function WatchVideo() {
                   })}
                 </p>
               </div>
+
+              {/* Subscribe / Unsubscribe button */}
+              <button
+                onClick={handleSubscribe}
+                disabled={subscriptionLoading}
+                className={`ml-2 px-4 py-1 rounded-full text-sm font-medium transition
+                  ${subscriptionLoading ? "opacity-60 cursor-not-allowed" : ""}
+                  ${
+                    subscribed
+                      ? "bg-zinc-700 hover:bg-zinc-600 text-white"
+                      : "bg-white text-black hover:bg-zinc-200"
+                  }`}
+              >
+                {/* Show "..." while request is in flight */}
+                {subscriptionLoading
+                  ? "..."
+                  : subscribed
+                    ? "Subscribed"
+                    : "Subscribe"}
+              </button>
             </div>
 
-            {/* Action buttons */}
+            {/* Like / dislike / share / save buttons */}
             <div className="flex items-center gap-2">
+              {/* Like button — red when liked, dark when not */}
               <Button
                 onClick={handleLike}
                 className={`flex items-center gap-1.5 text-sm ${
@@ -205,13 +293,16 @@ function WatchVideo() {
                 <FiThumbsUp size={15} />
                 <span>{likesCount?.toLocaleString() ?? 0}</span>
               </Button>
+
               <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
                 <FiThumbsDown size={15} />
               </Button>
+
               <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
                 <FiShare2 size={15} />
                 <span className="hidden sm:inline">Share</span>
               </Button>
+
               <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
                 <FiBookmark size={15} />
                 <span className="hidden sm:inline">Save</span>
@@ -219,11 +310,12 @@ function WatchVideo() {
             </div>
           </div>
 
-          {/* Description */}
+          {/* Description — clamped to 2 lines, expandable */}
           <div className="mt-4 bg-zinc-900 rounded-xl p-4 text-sm text-zinc-300 leading-relaxed">
             <p className={descriptionExpanded ? "" : "line-clamp-2"}>
               {description}
             </p>
+            {/* Only show toggle if description is long enough to clamp */}
             {description?.length > 150 && (
               <button
                 onClick={() => setDescriptionExpanded((prev) => !prev)}
@@ -234,12 +326,13 @@ function WatchVideo() {
             )}
           </div>
 
-          {/* Add Comments */}
+          {/* ── Comments section ── */}
           <div className="mt-6 space-y-4">
             <h3 className="text-lg font-semibold">
-              Comments ({video.commentsCount})
+              Comments ({video.commentsCount ?? comments.length})
             </h3>
 
+            {/* Add comment form */}
             <form
               onSubmit={handleSubmit(onCommentSubmit)}
               className="flex gap-3"
@@ -251,6 +344,7 @@ function WatchVideo() {
                   minLength: { value: 1, message: "Comment cannot be empty" },
                 })}
               />
+              {/* Disabled while posting to prevent duplicate submissions */}
               <Button
                 type="submit"
                 disabled={commentSubmitting}
@@ -264,51 +358,50 @@ function WatchVideo() {
               <p className="text-red-400 text-xs">{errors.content.message}</p>
             )}
 
-            {/* show comments */}
-            {/* Scrollable comments container */}
+            {/* Scrollable comments list */}
             <div className="h-96 overflow-y-auto pr-2 space-y-5 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+              {/* Empty state */}
               {comments.length === 0 && !commentsLoading ? (
                 <p className="text-zinc-500">No comments yet.</p>
               ) : (
                 <>
-                  {comments.map((comment) => {
-                    return (
-                      <div key={comment._id} className="flex gap-3">
-                        {comment.owner?.avatar ? (
-                          <img
-                            src={comment.owner.avatar}
-                            alt={comment.owner.username}
-                            className="w-10 h-10 rounded-full object-cover border border-zinc-700 flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
-                            {comment.owner?.username?.charAt(0).toUpperCase() ??
-                              "?"}
-                          </div>
-                        )}
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-sm">
-                              {comment.owner?.username}
-                            </h4>
-                            <span className="text-xs text-zinc-500">
-                              {formatDistanceToNow(
-                                new Date(comment.createdAt),
-                                {
-                                  addSuffix: true,
-                                },
-                              )}
-                            </span>
-                          </div>
-                          <p className="text-zinc-300 mt-1">
-                            {comment.content}
-                          </p>
+                  {/* Comment list */}
+                  {comments.map((comment) => (
+                    <div key={comment._id} className="flex gap-3">
+                      {/* Commenter avatar with initial fallback */}
+                      {comment.owner?.avatar ? (
+                        <img
+                          src={comment.owner.avatar}
+                          alt={comment.owner.username}
+                          className="w-10 h-10 rounded-full object-cover border border-zinc-700 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                          {comment.owner?.username?.charAt(0).toUpperCase() ??
+                            "?"}
                         </div>
-                      </div>
-                    );
-                  })}
+                      )}
 
-                  {/* Load more comments */}
+                      <div>
+                        {/* Username + relative time */}
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium text-sm">
+                            {comment.owner?.username}
+                          </h4>
+                          <span className="text-xs text-zinc-500">
+                            {formatDistanceToNow(new Date(comment.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </span>
+                        </div>
+
+                        {/* Comment text */}
+                        <p className="text-zinc-300 mt-1">{comment.content}</p>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Load more button — hidden when no more pages or currently loading */}
                   {hasMore && !commentsLoading && (
                     <div className="flex justify-center pt-4">
                       <Button
@@ -320,14 +413,14 @@ function WatchVideo() {
                     </div>
                   )}
 
-                  {/* Spinner at the bottom while loading next page */}
+                  {/* Spinner while fetching next page */}
                   {commentsLoading && comments.length > 0 && (
                     <div className="flex justify-center py-3">
                       <FaSpinner className="text-red-500 animate-spin" />
                     </div>
                   )}
 
-                  {/* End of comments message */}
+                  {/* End of comments message — shown when all pages loaded */}
                   {!hasMore && comments.length > 0 && (
                     <p className="text-center text-zinc-600 text-xs py-2">
                       No more comments
@@ -339,11 +432,12 @@ function WatchVideo() {
           </div>
         </div>
 
-        {/* Right — recommended videos placeholder */}
+        {/* ── Right column: recommended videos placeholder ── */}
         <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0">
           <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
             Up next
           </h2>
+          {/* Skeleton placeholders — replace with real data when API supports it */}
           <div className="flex flex-col gap-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex gap-3 animate-pulse">
