@@ -16,6 +16,7 @@ function Profile() {
 
   // get username from URL params — works for viewing any channel
   const { username } = useParams();
+  console.log(username)
 
   // current logged in user — to show edit button if viewing own profile
   const currentUser = useSelector((state) => state.auth.user);
@@ -24,14 +25,12 @@ function Profile() {
     const fetchChannel = async () => {
       try {
         setLoading(true);
-        const [channelRes, videosRes] = await Promise.all([
-          api.get(`/users/c/${user.username}`),
-          api.get(`/videos?userId=${user._id}`),
-        ]);
-
+        const channelRes = await api.get(`/users/c/${username}`)
         const channelData = channelRes.data.data;
-        const videoData = videosRes.data.data;
         setChannel(channelData);
+        
+        const videosRes = await api.get(`/videos?userId=${channelData._id}`)
+        const videoData = videosRes.data.data;
         setVideos(videoData);
       } catch (error) {
       } finally {
@@ -76,7 +75,7 @@ function Profile() {
     createdAt,
   } = channel;
 
-  const isOwnProfile = currentUser?.username === channelUsername;
+  const isOwnProfile = currentUser?.username === username;
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
