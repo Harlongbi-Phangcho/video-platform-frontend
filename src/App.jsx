@@ -11,6 +11,7 @@ import { login as authLogin } from "./store/authSlice";
 import { FaSpinner } from "react-icons/fa";
 import AuthLayout from "./components/AuthLayout";
 import UploadVideo from "./pages/UploadVideo";
+import Profile from "./pages/Profile";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -85,6 +86,14 @@ function App() {
           element={
             <AuthLayout authentication={false}>
               <Register />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/channel"
+          element={
+            <AuthLayout authentication={true}>
+              <Profile />
             </AuthLayout>
           }
         />
