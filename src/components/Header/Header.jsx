@@ -12,7 +12,7 @@ function Header() {
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
+
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
@@ -52,7 +52,10 @@ function Header() {
         </Link>
 
         {/* Search */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-2xl hidden sm:flex">
+        <form
+          onSubmit={handleSearch}
+          className="flex-1 max-w-2xl hidden sm:flex"
+        >
           <div className="relative w-full">
             <input
               type="text"
@@ -85,10 +88,10 @@ function Header() {
           ) : (
             <>
               {/* Upload */}
-              <Link to="/upload" className="hidden sm:block">
+              <Link to="/upload">
                 <Button variant="ghost" className="flex items-center gap-1.5">
                   <FiUpload size={15} />
-                  <span>Upload</span>
+                  <span className="hidden sm:inline">Upload</span>
                 </Button>
               </Link>
 
