@@ -59,9 +59,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<Home />} />
-
-        {/* Watch video inside Layout so the header is visible */}
-        <Route path="/watch/:videoId" element={<WatchVideo />} />
+        <Route path="watch/:videoId" element={<WatchVideo />} />
+        <Route path="channel/:username" element={<Profile />} />
 
         <Route
           path="/upload"
@@ -86,14 +85,6 @@ function App() {
           element={
             <AuthLayout authentication={false}>
               <Register />
-            </AuthLayout>
-          }
-        />
-        <Route
-          path="/channel"
-          element={
-            <AuthLayout authentication={true}>
-              <Profile />
             </AuthLayout>
           }
         />
