@@ -10,11 +10,11 @@ import { FiSearch, FiUpload, FiLogOut } from "react-icons/fi";
 function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const user = useSelector((state) => state.auth.user);
-  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
-
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  const user = useSelector((state) => state.auth.user);
+  const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -99,8 +99,8 @@ function Header() {
               >
                 {user?.avatar ? (
                   <img
-                    src={user.avatar}
-                    alt={user.username}
+                    src={user?.avatar}
+                    alt={user?.username}
                     className="w-9 h-9 rounded-full object-cover border border-zinc-700"
                     onError={(e) => {
                       e.currentTarget.style.display = "none";
