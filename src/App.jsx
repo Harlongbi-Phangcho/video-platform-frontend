@@ -12,6 +12,7 @@ import { FaSpinner } from "react-icons/fa";
 import AuthLayout from "./components/AuthLayout";
 import UploadVideo from "./pages/UploadVideo";
 import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -85,6 +86,14 @@ function App() {
           element={
             <AuthLayout authentication={false}>
               <Register />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            <AuthLayout authentication={true}>
+              <EditProfile />
             </AuthLayout>
           }
         />
