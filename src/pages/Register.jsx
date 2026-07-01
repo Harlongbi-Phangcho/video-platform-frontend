@@ -60,6 +60,7 @@ function Register() {
       formData.append("email", data.email);
       formData.append("password", data.password);
       formData.append("avatar", data.avatar[0]);
+      
       if (data.coverImage?.[0]) {
         formData.append("coverImage", data.coverImage[0]);
       }

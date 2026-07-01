@@ -16,8 +16,7 @@ function Profile() {
 
   // get username from URL params — works for viewing any channel
   const { username } = useParams();
-  console.log(username)
-
+ 
   // current logged in user — to show edit button if viewing own profile
   const currentUser = useSelector((state) => state.auth.user);
 
