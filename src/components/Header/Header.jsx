@@ -93,7 +93,7 @@ function Header() {
                   <FiUpload size={15} />
                   <span className="hidden sm:inline">Upload</span>
                 </Button>
-              </Link>
+              </Link> 
 
               {/* Avatar + username */}
               <Link

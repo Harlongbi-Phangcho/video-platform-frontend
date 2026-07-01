@@ -13,6 +13,7 @@ import AuthLayout from "./components/AuthLayout";
 import UploadVideo from "./pages/UploadVideo";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Search from "./pages/Search";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -62,6 +63,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="watch/:videoId" element={<WatchVideo />} />
         <Route path="channel/:username" element={<Profile />} />
+        <Route path="search" element={<Search />} />
 
         <Route
           path="/upload"
