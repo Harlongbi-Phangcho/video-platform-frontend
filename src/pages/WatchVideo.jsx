@@ -108,7 +108,6 @@ function WatchVideo() {
     fetchComments(nextPage, true); // append = true so existing comments stay
   };
 
-  // Toggle Like
   // update count immediately, revert on error
   const handleLike = async () => {
     try {
@@ -196,7 +195,7 @@ function WatchVideo() {
   if (!video) return null;
 
   const { videoFile, title, description, views, createdAt, owner } = video;
-
+console.log(video)
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">

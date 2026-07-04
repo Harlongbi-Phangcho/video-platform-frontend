@@ -6,38 +6,42 @@ import { FiCalendar, FiUsers, FiVideo } from "react-icons/fi";
 import { formatDistanceToNow } from "date-fns";
 import { FaSpinner } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
+import WatchHistory from "./WatchHistory";
 
 function Profile() {
-  const [channel, setChannel] = useState({});
+  const [channel, setChannel] = useState(null);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const user = useSelector((state) => state.auth.user);
-
-  // get username from URL params — works for viewing any channel
+  
+  // get username from URL params
   const { username } = useParams();
- 
-  // current logged in user — to show edit button if viewing own profile
+  // current logged in user
   const currentUser = useSelector((state) => state.auth.user);
+
+  const [activeTab, setActiveTab] = useState("videos"); // "videos" | "history"
 
   useEffect(() => {
     const fetchChannel = async () => {
       try {
         setLoading(true);
-        const channelRes = await api.get(`/users/c/${username}`)
+        const channelRes = await api.get(`/users/c/${username}`);
         const channelData = channelRes.data.data;
         setChannel(channelData);
-        
-        const videosRes = await api.get(`/videos?userId=${channelData._id}`)
+
+        const videosRes = await api.get(`/videos?userId=${channelData._id}`);
         const videoData = videosRes.data.data;
         setVideos(videoData);
       } catch (error) {
+         setError(error.response?.data?.message || "Failed to load channel.");
       } finally {
         setLoading(false);
       }
     };
     fetchChannel();
   }, [username]);
+
+
 
   if (loading) {
     return (
@@ -69,12 +73,14 @@ function Profile() {
     username: channelUsername,
     avatar,
     coverImage,
-    subscriberCount,
+    subscribersCount,
     channelsSubscribeToCount,
     createdAt,
   } = channel;
 
   const isOwnProfile = currentUser?.username === username;
+
+  console.log(currentUser)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -128,8 +134,8 @@ function Profile() {
         <div className="flex flex-wrap gap-6 text-sm text-zinc-400 mb-8 pb-6 border-b border-zinc-800">
           <span className="flex items-center gap-1.5">
             <FiUsers size={14} className="text-red-500" />
-            {subscriberCount?.toLocaleString() ?? 0}{" "}
-            {subscriberCount === 1 ? "subscriber" : "subscribers"}
+            {subscribersCount?.toLocaleString() ?? 0}{" "}
+            {subscribersCount === 1 ? "subscriber" : "subscribers"}
           </span>
 
           <span className="flex items-center gap-1.5">
@@ -150,39 +156,70 @@ function Profile() {
           </span>
         </div>
 
-        {/* Videos grid */}
-        {videos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 text-zinc-500 gap-2">
-            <FiVideo size={40} className="text-zinc-700" />
-            <p className="text-lg">No videos yet</p>
-            {isOwnProfile && (
-              <Link
-                to="/upload"
-                className="mt-2 px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm transition"
-              >
-                Upload your first video
-              </Link>
-            )}
-          </div>
-        ) : (
-          <>
-            <h2 className="text-lg font-semibold mb-4">Videos</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-10">
-              {videos.map((video) => (
-                <Card
-                  key={video._id}
-                  id={video._id}
-                  thumbnail={video.thumbnail}
-                  avatar={avatar}
-                  title={video.title}
-                  channelName={channelUsername}
-                  views={video.views}
-                  uploadedAt={video.updatedAt}
-                />
-              ))}
+        {/* Tabs — only show history tab on own profile */}
+        <div className="flex gap-1 border-b border-zinc-800 mb-6">
+          <button
+            onClick={() => setActiveTab("videos")}
+            className={`px-4 py-2 text-sm font-medium transition border-b-2 -mb-px ${
+              activeTab === "videos"
+                ? "border-red-500 text-white"
+                : "border-transparent text-zinc-500 hover:text-white"
+            }`}
+          >
+            Videos
+          </button>
+
+          {/* Only the logged in user can see their own watch history */}
+          {isOwnProfile && (
+            <button
+              onClick={() => setActiveTab("history")}
+              className={`px-4 py-2 text-sm font-medium transition border-b-2 -mb-px ${
+                activeTab === "history"
+                  ? "border-red-500 text-white"
+                  : "border-transparent text-zinc-500 hover:text-white"
+              }`}
+            >
+              Watch History
+            </button>
+          )}
+        </div>
+
+        {activeTab === "videos" &&
+          /* Videos grid */
+          (videos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-zinc-500 gap-2">
+              <FiVideo size={40} className="text-zinc-700" />
+              <p className="text-lg">No videos yet</p>
+              {isOwnProfile && (
+                <Link
+                  to="/upload"
+                  className="mt-2 px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm transition"
+                >
+                  Upload your first video
+                </Link>
+              )}
             </div>
-          </>
-        )}
+          ) : (
+            <>
+              <h2 className="text-lg font-semibold mb-4">Videos</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-10">
+                {videos.map((video) => (
+                  <Card
+                    key={video._id}
+                    id={video._id}
+                    thumbnail={video.thumbnail}
+                    avatar={avatar}
+                    title={video.title}
+                    channelName={channelUsername}
+                    views={video.views}
+                    uploadedAt={video.updatedAt}
+                  />
+                ))}
+              </div>
+            </>
+          ))}
+
+        {activeTab === "history" && isOwnProfile && <WatchHistory />}
       </div>
     </div>
   );
