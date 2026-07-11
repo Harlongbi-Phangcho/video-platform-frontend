@@ -6,6 +6,10 @@ import {
   FiShare2,
   FiBookmark,
   FiEye,
+  FiEdit2,
+  FiTrash2,
+  FiX,
+  FiCheck,
 } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
@@ -13,10 +17,11 @@ import { formatDistanceToNow } from "date-fns";
 import toast from "react-hot-toast";
 import { Button, Input } from "../components/index";
 import { useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
 
 function WatchVideo() {
   const { videoId } = useParams(); // get videoId from URL params
-
+ const currentUser = useSelector((state) => state.auth.user); // get current user from Redux store
   // video data
   const [video, setVideo] = useState(null);
 
@@ -38,6 +43,12 @@ function WatchVideo() {
   const [commentsLoading, setCommentsLoading] = useState(false); // loading next page
   const [commentSubmitting, setCommentSubmitting] = useState(false); // posting a comment
   const COMMENTS_LIMIT = 10; // comments per page
+
+  //edit comments
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editContent, setEditContent] = useState("");
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState(null);
 
   // subscription state
   const [subscribed, setSubscribed] = useState(false);
@@ -167,6 +178,66 @@ function WatchVideo() {
     }
   };
 
+  // start editing comment
+  const handleEditStart = (comment) => {
+    setEditingCommentId(comment._id);
+    setEditContent(comment.content);
+  };
+
+  // cancel editing
+  const handleEditCancel = (comment) => {
+    setEditingCommentId(null);
+    setEditContent("");
+  };
+
+  //handle submit
+  const handleEditSubmit = async (commentId) => {
+    if (!editContent.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+    setEditSubmitting(true);
+    try {
+      await api.patch(`/comments/c/${commentId}`, { content: editContent });
+      toast.success("Comment updated");
+
+      setComments((prev) =>
+        prev.map((c) =>
+          c._id === commentId ? { ...c, content: editContent } : c,
+        ),
+      );
+
+      setEditingCommentId(null);
+      setEditContent("");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update comment");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDeleteCommentId = async (commentId) => {
+    setDeletingCommentId(commentId);
+    try {
+      await api.delete(`/comments/c/${commentId}`);
+      toast.success("Comment deleted");
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+
+      setVideo((prev) =>
+        prev
+          ? {
+              ...prev,
+              commentsCount: Math.max((prev.commentsCount || 1) - 1, 0),
+            }
+          : prev,
+      );
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete comment");
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
   //Loading State
   if (loading) {
     return (
@@ -195,10 +266,11 @@ function WatchVideo() {
   if (!video) return null;
 
   const { videoFile, title, description, views, createdAt, owner } = video;
-console.log(video)
+
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
+        
         {/* ── Left column: video + details ── */}
         <div className="flex-1 min-w-0">
           {/* Video player */}
@@ -383,19 +455,86 @@ console.log(video)
 
                       <div>
                         {/* Username + relative time */}
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium text-sm">
-                            {comment.owner?.username}
-                          </h4>
-                          <span className="text-xs text-zinc-500">
-                            {formatDistanceToNow(new Date(comment.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium text-sm">
+                              {comment.owner?.username}
+                            </h4>
+                            <span className="text-xs text-zinc-500">
+                              {formatDistanceToNow(
+                                new Date(comment.createdAt),
+                                {
+                                  addSuffix: true,
+                                },
+                              )}
+                            </span>
+                          </div>
+
+                          {/* Edit/delete — only shown to comment owner */}
+                          {currentUser?.username ===
+                            comment.owner?.username && (
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                               {editingCommentId !== comment._id && (
+                                <>
+                                <button
+                                    onClick={() => handleEditStart(comment)}
+                                    className="text-zinc-500 hover:text-white transition p-1"
+                                    title="Edit comment"
+                                  >
+                                    <FiEdit2 size={13} />
+                                  </button>
+                                   <button
+                                    onClick={() => handleDeleteCommentId(comment._id)}
+                                    disabled={deletingCommentId === comment._id}
+                                    className="text-zinc-500 hover:text-red-400 transition p-1 disabled:opacity-50"
+                                    title="Delete comment"
+                                  >
+                                    {deletingCommentId === comment._id ? (
+                                      <FaSpinner size={13} className="animate-spin" />
+                                    ) : (
+                                      <FiTrash2 size={13} />
+                                    )}
+                                  </button>
+                                </>
+                               )}
+                            </div>
+                          )}
                         </div>
 
-                        {/* Comment text */}
-                        <p className="text-zinc-300 mt-1">{comment.content}</p>
+                         {/* Comment content or edit input */}
+                        {editingCommentId === comment._id ? (
+                          // edit mode — show input with save/cancel
+                          <div className="mt-1 flex gap-2">
+                            <input
+                              value={editContent}
+                              onChange={(e) => setEditContent(e.target.value)}
+                              className="flex-1 bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-red-500 transition"
+                              autoFocus
+                            />
+                            <button
+                              onClick={() => handleEditSubmit(comment._id)}
+                              disabled={editSubmitting}
+                              className="text-green-400 hover:text-green-300 transition disabled:opacity-50 p-1"
+                              title="Save"
+                            >
+                              {editSubmitting ? (
+                                <FaSpinner size={13} className="animate-spin" />
+                              ) : (
+                                <FiCheck size={16} />
+                              )}
+                            </button>
+                            <button
+                              onClick={handleEditCancel}
+                              className="text-zinc-400 hover:text-white transition p-1"
+                              title="Cancel"
+                            >
+                              <FiX size={16} />
+                            </button>
+                          </div>
+                        ) : (
+                          // normal mode — show comment text
+                          <p className="text-zinc-300 mt-1 text-sm">{comment.content}</p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -431,6 +570,7 @@ console.log(video)
           </div>
         </div>
 
+
         {/* ── Right column: recommended videos placeholder ── */}
         <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0">
           <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
@@ -450,6 +590,7 @@ console.log(video)
             ))}
           </div>
         </aside>
+
       </div>
     </div>
   );
