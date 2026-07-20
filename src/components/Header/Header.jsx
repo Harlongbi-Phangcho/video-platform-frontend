@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import Button from "../Button";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as authLogout } from "../../store/authSlice";
-import { FiSearch, FiUpload, FiLogOut } from "react-icons/fi";
+import { FiSearch, FiUpload, FiLogOut, FiBarChart2 } from "react-icons/fi";
 
 function Header() {
   const navigate = useNavigate();
@@ -93,7 +93,15 @@ function Header() {
                   <FiUpload size={15} />
                   <span className="hidden sm:inline">Upload</span>
                 </Button>
-              </Link> 
+              </Link>
+              
+              {/* Dashboard */}
+              <Link to="/dashboard" className="hidden sm:block">
+                <Button variant="ghost" className="flex items-center gap-1.5">
+                  <FiBarChart2 size={15} />
+                  <span>Dashboard</span>
+                </Button>
+              </Link>
 
               {/* Avatar + username */}
               <Link

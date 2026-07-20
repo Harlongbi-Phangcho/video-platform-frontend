@@ -14,6 +14,7 @@ import UploadVideo from "./pages/UploadVideo";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Search from "./pages/Search";
+import Dashboard from "./pages/Dashboard";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -70,6 +71,15 @@ function App() {
           element={
             <AuthLayout authentication={true}>
               <UploadVideo />
+            </AuthLayout>
+          }
+        />
+
+        <Route
+          path="dashboard"
+          element={
+            <AuthLayout authentication={true}>
+              <Dashboard />
             </AuthLayout>
           }
         />
