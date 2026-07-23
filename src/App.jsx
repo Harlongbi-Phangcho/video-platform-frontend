@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
+import EditVideo from "./pages/EditVideo";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -106,6 +107,14 @@ function App() {
           element={
             <AuthLayout authentication={true}>
               <EditProfile />
+            </AuthLayout>
+          }
+        />
+        <Route
+          path="/edit-video/:videoId"
+          element={
+            <AuthLayout authentication={true}>
+              <EditVideo />
             </AuthLayout>
           }
         />
