@@ -25,7 +25,6 @@ function WatchHistory() {
     fetchHistory();
   }, []);
 
-  console.log(history)
 
   if (loading) {
     return (
