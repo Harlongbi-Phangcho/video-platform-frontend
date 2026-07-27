@@ -7,13 +7,14 @@ import { formatDistanceToNow } from "date-fns";
 import { FaSpinner } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
 import WatchHistory from "./WatchHistory";
+import LikedVideos from "./LikedVideos";
 
 function Profile() {
   const [channel, setChannel] = useState(null);
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  
+
   // get username from URL params
   const { username } = useParams();
   // current logged in user
@@ -33,15 +34,13 @@ function Profile() {
         const videoData = videosRes.data.data;
         setVideos(videoData);
       } catch (error) {
-         setError(error.response?.data?.message || "Failed to load channel.");
+        setError(error.response?.data?.message || "Failed to load channel.");
       } finally {
         setLoading(false);
       }
     };
     fetchChannel();
   }, [username]);
-
-
 
   if (loading) {
     return (
@@ -79,8 +78,6 @@ function Profile() {
   } = channel;
 
   const isOwnProfile = currentUser?.username === username;
-
-  console.log(currentUser)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -182,6 +179,19 @@ function Profile() {
               Watch History
             </button>
           )}
+
+          {isOwnProfile && (
+            <button
+              onClick={() => setActiveTab("liked")}
+              className={`px-4 py-2 text-sm font-medium transition border-b-2 -mb-px ${
+                activeTab === "liked"
+                  ? "border-red-500 text-white"
+                  : "border-transparent text-zinc-500 hover:text-white"
+              }`}
+            >
+              Liked Videos
+            </button>
+          )}
         </div>
 
         {activeTab === "videos" &&
@@ -220,6 +230,8 @@ function Profile() {
           ))}
 
         {activeTab === "history" && isOwnProfile && <WatchHistory />}
+
+        {activeTab === "liked" && isOwnProfile && <LikedVideos />}
       </div>
     </div>
   );
