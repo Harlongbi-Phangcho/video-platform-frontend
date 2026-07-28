@@ -21,9 +21,13 @@ import { useSelector } from "react-redux";
 
 function WatchVideo() {
   const { videoId } = useParams(); // get videoId from URL params
- const currentUser = useSelector((state) => state.auth.user); // get current user from Redux store
+  const currentUser = useSelector((state) => state.auth.user); // get current user from Redux store
   // video data
   const [video, setVideo] = useState(null);
+
+  // Recommended
+  const [recommendedVideos, setRecommendedVideos] = useState([]);
+  const [recommendedLoading, setRecommendedLoading] = useState(true);
 
   // like state
   const [liked, setLiked] = useState(false);
@@ -62,6 +66,22 @@ function WatchVideo() {
     reset,
     formState: { errors },
   } = useForm();
+
+  useEffect(() => {
+    const fetchRecommendedVideos = async () => {
+      setRecommendedLoading(true);
+      try {
+        const res = await api.get(`/videos?limit=10`);
+        const filteredVideos = res.data.data.filter((v) => v._id !== videoId);
+        setRecommendedVideos(filteredVideos);
+      } catch (error) {
+        console.error("Failed to fetch recommended videos:", error);
+      } finally {
+        setRecommendedLoading(false);
+      }
+    };
+    fetchRecommendedVideos();
+  }, [videoId]);
 
   // Fetch Comment
   // append: true = add to existing list (load more), false = replace list (refresh)
@@ -185,7 +205,7 @@ function WatchVideo() {
   };
 
   // cancel editing
-  const handleEditCancel = (comment) => {
+  const handleEditCancel = () => {
     setEditingCommentId(null);
     setEditContent("");
   };
@@ -270,7 +290,6 @@ function WatchVideo() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="max-w-7xl mx-auto px-4 py-6 flex flex-col lg:flex-row gap-6">
-        
         {/* ── Left column: video + details ── */}
         <div className="flex-1 min-w-0">
           {/* Video player */}
@@ -474,34 +493,39 @@ function WatchVideo() {
                           {currentUser?.username ===
                             comment.owner?.username && (
                             <div className="flex items-center gap-1 flex-shrink-0">
-                               {editingCommentId !== comment._id && (
+                              {editingCommentId !== comment._id && (
                                 <>
-                                <button
+                                  <button
                                     onClick={() => handleEditStart(comment)}
                                     className="text-zinc-500 hover:text-white transition p-1"
                                     title="Edit comment"
                                   >
                                     <FiEdit2 size={13} />
                                   </button>
-                                   <button
-                                    onClick={() => handleDeleteCommentId(comment._id)}
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteCommentId(comment._id)
+                                    }
                                     disabled={deletingCommentId === comment._id}
                                     className="text-zinc-500 hover:text-red-400 transition p-1 disabled:opacity-50"
                                     title="Delete comment"
                                   >
                                     {deletingCommentId === comment._id ? (
-                                      <FaSpinner size={13} className="animate-spin" />
+                                      <FaSpinner
+                                        size={13}
+                                        className="animate-spin"
+                                      />
                                     ) : (
                                       <FiTrash2 size={13} />
                                     )}
                                   </button>
                                 </>
-                               )}
+                              )}
                             </div>
                           )}
                         </div>
 
-                         {/* Comment content or edit input */}
+                        {/* Comment content or edit input */}
                         {editingCommentId === comment._id ? (
                           // edit mode — show input with save/cancel
                           <div className="mt-1 flex gap-2">
@@ -533,7 +557,9 @@ function WatchVideo() {
                           </div>
                         ) : (
                           // normal mode — show comment text
-                          <p className="text-zinc-300 mt-1 text-sm">{comment.content}</p>
+                          <p className="text-zinc-300 mt-1 text-sm">
+                            {comment.content}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -570,7 +596,6 @@ function WatchVideo() {
           </div>
         </div>
 
-
         {/* ── Right column: recommended videos placeholder ── */}
         <aside className="w-full lg:w-80 xl:w-96 flex-shrink-0">
           <h2 className="text-sm font-semibold text-zinc-400 mb-3 uppercase tracking-wide">
@@ -578,19 +603,56 @@ function WatchVideo() {
           </h2>
           {/* Skeleton placeholders — replace with real data when API supports it */}
           <div className="flex flex-col gap-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-3 animate-pulse">
-                <div className="w-40 aspect-video bg-zinc-800 rounded-lg flex-shrink-0" />
-                <div className="flex-1 space-y-2 pt-1">
-                  <div className="h-3 bg-zinc-800 rounded w-full" />
-                  <div className="h-3 bg-zinc-800 rounded w-3/4" />
-                  <div className="h-2.5 bg-zinc-800 rounded w-1/2" />
+            {recommendedLoading ? (
+              // skeleton placeholders while loading
+              [...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="w-40 aspect-video bg-zinc-800 rounded-lg flex-shrink-0" />
+                  <div className="flex-1 space-y-2 pt-1">
+                    <div className="h-3 bg-zinc-800 rounded w-full" />
+                    <div className="h-3 bg-zinc-800 rounded w-3/4" />
+                    <div className="h-2.5 bg-zinc-800 rounded w-1/2" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : recommendedVideos.length === 0 ? (
+              <p className="text-zinc-500 text-sm">No videos found</p>
+            ) : (
+              recommendedVideos.map((video) => (
+                <Link
+                  key={video._id}
+                  to={`/watch/${video._id}`}
+                  className="flex gap-3 group"
+                >
+                  {/* Thumbnail */}
+                  <div className="w-40 aspect-video bg-zinc-800 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={video.thumbnail}
+                      alt={video.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-200"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 pt-1">
+                    <p className="text-sm font-medium line-clamp-2 group-hover:text-red-400 transition">
+                      {video.title}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      {video.ownerDetails?.username}
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-0.5">
+                      {video.views?.toLocaleString()} views ·{" "}
+                      {formatDistanceToNow(new Date(video.updatedAt), {
+                        addSuffix: true,
+                      })}
+                    </p>
+                  </div>
+                </Link>
+              ))
+            )}
           </div>
         </aside>
-
       </div>
     </div>
   );
