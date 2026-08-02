@@ -13,7 +13,7 @@ import {
 } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, set } from "date-fns";
 import toast from "react-hot-toast";
 import { Button, Input } from "../components/index";
 import { useForm } from "react-hook-form";
@@ -54,6 +54,10 @@ function WatchVideo() {
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState(null);
 
+  //like and unlike comments
+  const [commentLikes, setCommentLikes] = useState({});
+  const [commentLikesCount, setCommentLikesCount] = useState(0); // { commentId: count }
+
   // subscription state
   const [subscribed, setSubscribed] = useState(false);
   const [subscribersCount, setSubscribersCount] = useState(0);
@@ -92,12 +96,21 @@ function WatchVideo() {
         `/comments/${videoId}?page=${page}&limit=${COMMENTS_LIMIT}`,
       );
       const newComments = res.data.data;
-
       // if append, spread previous comments + new ones; otherwise replace
       setComments((prev) => (append ? [...prev, ...newComments] : newComments));
-
-      // if API returned fewer than limit, there are no more pages
       setHasMore(newComments.length === COMMENTS_LIMIT);
+
+      // seed likes state from comment data
+      const likesMap = {};
+      newComments.forEach((c) => {
+        likesMap[c._id] = {
+          liked: c.isLiked ?? false,
+          count: c.likesCount ?? 0,
+        };
+      });
+
+      // append mode — merge with existing, replace mode — set fresh
+      setCommentLikes((prev) => (append ? { ...prev, ...likesMap } : likesMap));
     } catch (error) {
       console.error(error);
     } finally {
@@ -148,6 +161,27 @@ function WatchVideo() {
       setLikesCount((prev) => (likedNow ? prev + 1 : prev - 1));
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to like the video.");
+    }
+  };
+
+  const handleCommentLike = async (commentId) => {
+    try {
+      const res = await api.post(`/likes/toggle/c/${commentId}`);
+      const likedNow = res.data.data.liked;
+      setCommentLikes(likedNow);
+
+      // update only this comment's entry
+      setCommentLikes((prev) => ({
+        ...prev,
+        [commentId]: {
+          liked: likedNow,
+          count: likedNow ? (prev[commentId]?.count ?? 0) + 1 : Math.max((prev[commentId]?.count ?? 0) - 1, 0),
+        },
+      }));
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to like the comment.",
+      );
     }
   };
 
@@ -556,10 +590,26 @@ function WatchVideo() {
                             </button>
                           </div>
                         ) : (
-                          // normal mode — show comment text
-                          <p className="text-zinc-300 mt-1 text-sm">
-                            {comment.content}
-                          </p>
+                          <div className="mt-1 flex items-center gap-3">
+                            <p className="text-zinc-300 mt-1 text-sm">
+                              {comment.content}
+                            </p>
+
+                            {/* Like button — reads from commentLikes[comment._id] */}
+                            <Button
+                              onClick={() => handleCommentLike(comment._id)} // Fix 3
+                              className={`flex items-center gap-1.5 text-sm ${
+                                commentLikes[comment._id]?.liked
+                                  ? "bg-red-600 hover:bg-red-700"
+                                  : "bg-zinc-800 hover:bg-zinc-700"
+                              }`}
+                            >
+                              <FiThumbsUp size={15} />
+                              <span>
+                                {commentLikes[comment._id]?.count ?? 0}
+                              </span>
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
