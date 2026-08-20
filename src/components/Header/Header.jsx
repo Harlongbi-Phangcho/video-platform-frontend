@@ -5,13 +5,14 @@ import toast from "react-hot-toast";
 import Button from "../Button";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as authLogout } from "../../store/authSlice";
-import { FiSearch, FiUpload, FiLogOut, FiBarChart2 } from "react-icons/fi";
+import { FiSearch, FiUpload, FiLogOut, FiBarChart2, FiX, FiMenu } from "react-icons/fi";
 
 function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const user = useSelector((state) => state.auth.user);
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -21,6 +22,7 @@ function Header() {
     const trimmed = searchQuery.trim();
     if (!trimmed) return;
     navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    setMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -34,6 +36,7 @@ function Header() {
       toast.error(error.response?.data?.message || "Logout failed");
     } finally {
       setIsLoggingOut(false);
+      setMenuOpen(false);
     }
   };
 
@@ -51,7 +54,7 @@ function Header() {
           My<span className="text-red-500">Tube</span>
         </Link>
 
-        {/* Search */}
+        {/* Search  desktop only*/}
         <form
           onSubmit={handleSearch}
           className="flex-1 max-w-2xl hidden sm:flex"
@@ -74,8 +77,8 @@ function Header() {
           </div>
         </form>
 
-        {/* Right side */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Right side desktop */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
           {!isAuthenticated ? (
             <>
               <Link to="/login">
@@ -96,7 +99,7 @@ function Header() {
               </Link>
               
               {/* Dashboard */}
-              <Link to="/dashboard" className="hidden sm:block">
+              <Link to="/dashboard" className="sm:block">
                 <Button variant="ghost" className="flex items-center gap-1.5">
                   <FiBarChart2 size={15} />
                   <span>Dashboard</span>
@@ -140,6 +143,13 @@ function Header() {
             </>
           )}
         </div>
+
+        {/* Hamburger button — mobile only */}
+        <button onClick={() => setMenuOpen((prev) => !prev)}
+          className="sm:hidden text-zinc-400 hover:text-white transition"
+          aria-label="Toggle menu">
+          {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </button>
       </div>
 
       {/* Mobile search row */}
@@ -161,6 +171,90 @@ function Header() {
           </button>
         </div>
       </form>
+
+      {/* Mobile menu — shown when hamburger is open */}
+      {menuOpen && (
+        <div className="sm:hidden mt-3 bg-zinc-900 rounded-xl p-4 flex flex-col gap-1 border border-zinc-800">
+           {!isAuthenticated ? (
+            <>
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+              >
+                <FiUser size={18} />
+                Login
+              </Link>
+              <Link
+                to="/register"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+              >
+                <FiUser size={18} />
+                Register
+              </Link>
+            </>
+          ) : (
+            <>
+            {/* User info at top of menu */}
+            <Link
+                to={`/channel/${user?.username}`}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 transition mb-1"
+              >
+                {user?.avatar ? (
+                  <img
+                    src={user?.avatar}
+                    alt={user?.username}
+                    className="w-9 h-9 rounded-full object-cover border border-zinc-700"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center text-sm font-bold">
+                    {avatarFallback}
+                  </div>
+                )}
+                <div>
+                  <p className="text-white text-sm font-medium">{user?.fullName}</p>
+                  <p className="text-zinc-400 text-xs">@{user?.username}</p>
+                </div>
+              </Link>
+
+              {/* Divider */}
+              <div className="border-t border-zinc-800 my-1" />
+
+               <Link
+                to="/upload"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+              >
+                <FiUpload size={18} />
+                Upload Video
+              </Link>
+
+              <Link
+                to="/dashboard"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 text-zinc-300 hover:text-white transition"
+              >
+                <FiBarChart2 size={18} />
+                Dashboard
+              </Link>
+
+              {/* Divider */}
+              <div className="border-t border-zinc-800 my-1" />
+
+              <button
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-zinc-800 text-red-400 hover:text-red-300 transition disabled:opacity-50 w-full text-left"
+              >
+                <FiLogOut size={18} />
+                {isLoggingOut ? "Logging out..." : "Logout"}
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </header>
   );
 }
