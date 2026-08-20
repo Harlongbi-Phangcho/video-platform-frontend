@@ -146,7 +146,7 @@ function Header() {
 
         {/* Hamburger button — mobile only */}
         <button onClick={() => setMenuOpen((prev) => !prev)}
-          className="sm:hidden text-zinc-400 hover:text-white transition"
+          className="sm:hidden top-6 right-4 absolute z-51 text-zinc-400 hover:text-white transition"
           aria-label="Toggle menu">
           {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
         </button>
@@ -174,7 +174,7 @@ function Header() {
 
       {/* Mobile menu — shown when hamburger is open */}
       {menuOpen && (
-        <div className="sm:hidden mt-3 bg-zinc-900 rounded-xl p-4 flex flex-col gap-1 border border-zinc-800">
+        <div className="sm:hidden absolute z-50 top-2 right-1 left-30 mt-3 bg-zinc-900 rounded-xl p-4 flex flex-col gap-1 border border-zinc-800">
            {!isAuthenticated ? (
             <>
               <Link
