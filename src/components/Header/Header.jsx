@@ -5,7 +5,7 @@ import toast from "react-hot-toast";
 import Button from "../Button";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as authLogout } from "../../store/authSlice";
-import { FiSearch, FiUpload, FiLogOut, FiBarChart2, FiX, FiMenu } from "react-icons/fi";
+import { FiSearch, FiUpload, FiLogOut, FiBarChart2, FiX, FiMenu, FiUser } from "react-icons/fi";
 
 function Header() {
   const navigate = useNavigate();
