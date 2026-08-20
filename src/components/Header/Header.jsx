@@ -51,7 +51,7 @@ function Header() {
           to="/"
           className="text-xl font-bold text-white whitespace-nowrap flex-shrink-0"
         >
-          My<span className="text-red-500">Tube</span>
+          Share<span className="text-red-500">Vid</span>
         </Link>
 
         {/* Search  desktop only*/}

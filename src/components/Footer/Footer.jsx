@@ -43,7 +43,7 @@ function Footer() {
         {/* Brand column */}
         <div className="col-span-2 md:col-span-1 flex flex-col gap-4">
           <Link to="/" className="text-xl font-bold text-white">
-            My<span className="text-red-500">Tube</span>
+            Share<span className="text-red-500">Vid</span>
           </Link>
           <p className="text-sm leading-relaxed">
             Watch, upload, and share videos with creators around the world.
@@ -86,7 +86,7 @@ function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-zinc-800 px-6 py-4 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-zinc-500">
-        <p>&copy; {new Date().getFullYear()} MyTube. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} ShareVid. All rights reserved.</p>
         <p>
           Made with{" "}
           <span className="text-red-500">&hearts;</span>{" "}
