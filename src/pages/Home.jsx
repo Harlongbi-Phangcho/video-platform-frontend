@@ -3,8 +3,7 @@ import Card from "../components/Card";
 import { api } from "../api/axios";
 import { FaSpinner } from "react-icons/fa";
 
-//future feature: categories filter
-// const CATEGORIES = ["All", "Music", "Gaming", "Education", "Coding", "Sports", "News"];
+
 
 function Home() {
   const [videos, setVideos] = useState([]);
@@ -63,25 +62,6 @@ function Home() {
         </button>
       </section>
       
-      //future feature: categories filter
-      {/* Categories */}
-      {/* <section className="px-8 mb-8 flex justify-center">
-        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-          {CATEGORIES.map((item) => (
-            <button
-              key={item}
-              onClick={() => setActiveCategory(item)}
-              className={`px-5 py-2 rounded-full whitespace-nowrap transition ${
-                activeCategory === item
-                  ? "bg-red-600 text-white"
-                  : "bg-zinc-800 hover:bg-zinc-700 text-zinc-300"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
-        </div>
-      </section> */}
 
       {/* Video Grid */}
       <section className="px-6 pb-10">
