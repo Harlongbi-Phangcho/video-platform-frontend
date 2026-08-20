@@ -3,7 +3,8 @@ import Card from "../components/Card";
 import { api } from "../api/axios";
 import { FaSpinner } from "react-icons/fa";
 
-const CATEGORIES = ["All", "Music", "Gaming", "Education", "Coding", "Sports", "News"];
+//future feature: categories filter
+// const CATEGORIES = ["All", "Music", "Gaming", "Education", "Coding", "Sports", "News"];
 
 function Home() {
   const [videos, setVideos] = useState([]);
@@ -61,9 +62,10 @@ function Home() {
           Explore Videos
         </button>
       </section>
-
+      
+      //future feature: categories filter
       {/* Categories */}
-      <section className="px-8 mb-8 flex justify-center">
+      {/* <section className="px-8 mb-8 flex justify-center">
         <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
           {CATEGORIES.map((item) => (
             <button
@@ -79,7 +81,7 @@ function Home() {
             </button>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* Video Grid */}
       <section className="px-6 pb-10">
