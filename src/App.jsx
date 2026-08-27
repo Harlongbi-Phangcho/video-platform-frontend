@@ -31,7 +31,7 @@ function NotFound() {
 }
 
 function App() {
-  const [loading, setLoading] = useState(true);
+  
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -43,21 +43,11 @@ function App() {
         }
       } catch {
         // Silently ignore — user simply isn't logged in
-      } finally {
-        setLoading(false);
-      }
+      } 
     };
     getCurrentUser();
   }, [dispatch]); // dispatch added to dependency array
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center gap-3">
-        <FaSpinner className="text-red-500 text-5xl animate-spin" />
-        <p className="text-zinc-400">Loading...</p>
-      </div>
-    );
-  }
 
   return (
     <Routes>
