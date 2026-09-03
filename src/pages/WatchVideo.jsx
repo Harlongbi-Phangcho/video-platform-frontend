@@ -10,6 +10,7 @@ import {
   FiTrash2,
   FiX,
   FiCheck,
+  FiList,
 } from "react-icons/fi";
 import { Link, useParams } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
@@ -18,6 +19,7 @@ import toast from "react-hot-toast";
 import { Button, Input } from "../components/index";
 import { useForm } from "react-hook-form";
 import { useSelector } from "react-redux";
+import AddToPlaylist from "../components/AddToPlaylist";
 
 function WatchVideo() {
   const { videoId } = useParams(); // get videoId from URL params
@@ -62,6 +64,8 @@ function WatchVideo() {
   const [subscribed, setSubscribed] = useState(false);
   const [subscribersCount, setSubscribersCount] = useState(0);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   // comment form
   const {
@@ -175,7 +179,9 @@ function WatchVideo() {
         ...prev,
         [commentId]: {
           liked: likedNow,
-          count: likedNow ? (prev[commentId]?.count ?? 0) + 1 : Math.max((prev[commentId]?.count ?? 0) - 1, 0),
+          count: likedNow
+            ? (prev[commentId]?.count ?? 0) + 1
+            : Math.max((prev[commentId]?.count ?? 0) - 1, 0),
         },
       }));
     } catch (error) {
@@ -417,20 +423,24 @@ function WatchVideo() {
                 <FiThumbsUp size={15} />
                 <span>{likesCount?.toLocaleString() ?? 0}</span>
               </Button>
-
               <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
                 <FiThumbsDown size={15} />
               </Button>
-
               <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
                 <FiShare2 size={15} />
                 <span className="hidden sm:inline">Share</span>
               </Button>
-
-              <Button className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm">
-                <FiBookmark size={15} />
-                <span className="hidden sm:inline">Save</span>
-              </Button>
+             
+              {/* Show "Add to playlist" button only if user is logged in */} 
+              {currentUser && (
+                <Button
+                  onClick={() => setShowPlaylistModal(true)}
+                  className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-sm"
+                >
+                  <FiList size={15} />
+                  <span className="hidden sm:inline">Save to playlist</span>
+                </Button>
+              )}
             </div>
           </div>
 
@@ -703,6 +713,14 @@ function WatchVideo() {
             )}
           </div>
         </aside>
+
+        {/* playlist */}
+        {showPlaylistModal && currentUser && (
+          <AddToPlaylist
+            videoId={videoId}
+            onClose={() => setShowPlaylistModal(false)}
+          />
+        )}
       </div>
     </div>
   );
