@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaSpinner } from "react-icons/fa";
 import { api } from "../api/axios";
 import Card from "../components/Card";
+import { FiHeart } from "react-icons/fi";
 
 function LikedVideos() {
   const [videos, setVideos] = useState([]);
