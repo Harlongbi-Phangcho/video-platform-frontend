@@ -166,7 +166,8 @@ function Profile() {
           >
             Videos
           </button>
-          {/* Only the logged in user can see their own watch history */}
+          
+          {/* watch history */}
           {isOwnProfile && (
             <button
               onClick={() => setActiveTab("history")}
@@ -179,6 +180,8 @@ function Profile() {
               Watch History
             </button>
           )}
+
+          {/* liked */}
           {isOwnProfile && (
             <button
               onClick={() => setActiveTab("liked")}
