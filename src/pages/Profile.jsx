@@ -8,6 +8,7 @@ import { FaSpinner } from "react-icons/fa";
 import { Link, useParams } from "react-router-dom";
 import WatchHistory from "./WatchHistory";
 import LikedVideos from "./LikedVideos";
+import Playlists from "../components/Playlists";
 
 function Profile() {
   const [channel, setChannel] = useState(null);
@@ -165,7 +166,6 @@ function Profile() {
           >
             Videos
           </button>
-
           {/* Only the logged in user can see their own watch history */}
           {isOwnProfile && (
             <button
@@ -179,7 +179,6 @@ function Profile() {
               Watch History
             </button>
           )}
-
           {isOwnProfile && (
             <button
               onClick={() => setActiveTab("liked")}
@@ -190,6 +189,20 @@ function Profile() {
               }`}
             >
               Liked Videos
+            </button>
+          )}
+
+          {/* playlist */}
+          {isOwnProfile && (
+            <button
+              onClick={() => setActiveTab("playlists")}
+              className={`px-4 py-2 text-sm font-medium transition border-b-2 -mb-px ${
+                activeTab === "playlists"
+                  ? "border-red-500 text-white"
+                  : "border-transparent text-zinc-500 hover:text-white"
+              }`}
+            >
+              Playlists
             </button>
           )}
         </div>
@@ -232,6 +245,8 @@ function Profile() {
         {activeTab === "history" && isOwnProfile && <WatchHistory />}
 
         {activeTab === "liked" && isOwnProfile && <LikedVideos />}
+
+        {activeTab === "playlists" && (<Playlists userId={channel._id} isOwnProfile={isOwnProfile} />)}
       </div>
     </div>
   );

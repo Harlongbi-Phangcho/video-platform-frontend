@@ -16,6 +16,8 @@ import EditProfile from "./pages/EditProfile";
 import Search from "./pages/Search";
 import Dashboard from "./pages/Dashboard";
 import EditVideo from "./pages/EditVideo";
+import Playlists from "./components/Playlists";
+import PlaylistPage from "./pages/PlaylistPage";
 
 // Simple inline 404 — move to pages/NotFound.jsx if it grows
 function NotFound() {
@@ -31,7 +33,6 @@ function NotFound() {
 }
 
 function App() {
-  
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -43,11 +44,10 @@ function App() {
         }
       } catch {
         // Silently ignore — user simply isn't logged in
-      } 
+      }
     };
     getCurrentUser();
   }, [dispatch]); // dispatch added to dependency array
-
 
   return (
     <Routes>
@@ -56,7 +56,8 @@ function App() {
         <Route path="watch/:videoId" element={<WatchVideo />} />
         <Route path="channel/:username" element={<Profile />} />
         <Route path="search" element={<Search />} />
-
+        // Public — anyone can view a playlist
+        <Route path="playlist/:playlistId" element={<PlaylistPage />} />
         <Route
           path="/upload"
           element={
@@ -65,7 +66,6 @@ function App() {
             </AuthLayout>
           }
         />
-
         <Route
           path="dashboard"
           element={
@@ -74,7 +74,6 @@ function App() {
             </AuthLayout>
           }
         />
-
         <Route
           path="/login"
           element={
@@ -83,7 +82,6 @@ function App() {
             </AuthLayout>
           }
         />
-
         <Route
           path="/register"
           element={
@@ -108,7 +106,6 @@ function App() {
             </AuthLayout>
           }
         />
-
         {/* Catch-all 404 */}
         <Route path="*" element={<NotFound />} />
       </Route>
